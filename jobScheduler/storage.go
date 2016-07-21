@@ -59,7 +59,7 @@ func mysqlCreateTable(db *sql.DB, dbname string) error{
 
 func NewStorage(dbname string) (*Storage, error) {
 	if dbConfig.isSql{
-		db, err := sql.Open("mysql", "root:airplug@tcp(localhost:3306)/")
+		db, err := sql.Open("mysql", "root:password@tcp(localhost:3306)/")
 		checkErr(err)
 		err = mysqlCreateTable(db,"jobScheduler")
 

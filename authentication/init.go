@@ -37,7 +37,7 @@ func Init() {
 
 	// create the backend
 	//backend, err = httpauth.NewLeveldbAuthBackend(backendfile)
-	backend, err = httpauth.NewSqlAuthBackend("mysql", "root:airplug@tcp(localhost:3306)/httpauth")
+	backend, err = httpauth.NewSqlAuthBackend("mysql", "root:password@tcp(localhost:3306)/httpauth")
 
 	if err != nil {
 		panic(err)
