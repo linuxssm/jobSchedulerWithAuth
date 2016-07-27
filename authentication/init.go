@@ -18,11 +18,11 @@ import (
 
 	"github.com/apexskier/httpauth"
 	//"github.com/gorilla/mux"
+	"github.com/linuxssm/frontendServer/conf"
 )
 
 var (
 	backend     httpauth.SqlAuthBackend
-
 	//backend     httpauth.LeveldbAuthBackend
 	aaa         httpauth.Authorizer
 	roles       map[string]httpauth.Role
@@ -37,7 +37,7 @@ func Init() {
 
 	// create the backend
 	//backend, err = httpauth.NewLeveldbAuthBackend(backendfile)
-	backend, err = httpauth.NewSqlAuthBackend("mysql", "root:password@tcp(localhost:3306)/httpauth")
+	backend, err = httpauth.NewSqlAuthBackend("mysql", conf.DB_AUTH_OPEN_INFO)
 
 	if err != nil {
 		panic(err)

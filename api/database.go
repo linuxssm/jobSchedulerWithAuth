@@ -1,4 +1,4 @@
-package jobScheduler
+package api
 
 import (
 	"github.com/syndtr/goleveldb/leveldb"
@@ -60,9 +60,9 @@ func mysqlCreateTable(db *sql.DB, dbname string) error{
 
 func NewStorage(dbname string) (*Storage, error) {
 	if dbConfig.isSql{
-		db, err := sql.Open("mysql", conf.DB_JOB_OPEN_INFO)
+		db, err := sql.Open("mysql", conf.DB_AUTH_OPEN_INFO)
 		checkErr(err)
-		err = mysqlCreateTable(db,"jobScheduler")
+		//err = mysqlCreateTable(db,"jobScheduler")
 
 		return &Storage{SqlDb: db}, nil
 	}else{
@@ -88,15 +88,15 @@ func (s *Storage) Close() {
 //Expression string
 //Endpoint   string
 //Payload    string
-func (s *Storage) SaveEntry(e *Entry) error {
+func (s *Storage) SaveEntry(e *User) error {
 	if dbConfig.isSql{
 		stmt, err := s.SqlDb.Prepare("INSERT job SET ID=?,Expression=?,Endpoint=?,Payload=?")
 		checkErr(err)
-		_, err = stmt.Exec(e.ID, e.Expression, e.Endpoint, e.Payload)
+		_, err = stmt.Exec(e.Id, e.Email)
 		checkErr(err)
 		return nil
 	}else{
-		err := s.DB.Put([]byte(e.ID), e.Bytes(), nil)
+		err := s.DB.Put([]byte(e.Id), e.Bytes(), nil)
 		if err != nil {
 			return err
 		}
@@ -105,17 +105,18 @@ func (s *Storage) SaveEntry(e *Entry) error {
 	}
 }
 
-func (s *Storage) AllEntries() []*Entry {
+func (s *Storage) AllEntries() []*User {
 	if dbConfig.isSql{
-		result := make([]*Entry, 0)
+		result := make([]*User, 0)
 		// query
-		rows, err := s.SqlDb.Query("SELECT * FROM job")
+		rows, err := s.SqlDb.Query("SELECT * FROM goauth")
 		checkErr(err)
 
-		var uid int
+		var hash string
+		var role string
 		for rows.Next() {
-			entry := &Entry{}
-			err = rows.Scan(&uid, &entry.ID, &entry.Expression, &entry.Endpoint, &entry.Payload)
+			entry := &User{}
+			err = rows.Scan(&entry.Id, &entry.Email, &hash, &role)
 			checkErr(err)
 			fmt.Println(entry)
 			result = append(result, entry)
@@ -124,10 +125,10 @@ func (s *Storage) AllEntries() []*Entry {
 		return result
 
 	}else{
-		result := make([]*Entry, 0)
+		result := make([]*User, 0)
 		iter := s.DB.NewIterator(nil, nil)
 		for iter.Next() {
-			entry, _ := NewEntryFromBytes(iter.Value())
+			entry, _ := NewUserFromBytes(iter.Value())
 			result = append(result, entry)
 		}
 		return result
@@ -135,14 +136,14 @@ func (s *Storage) AllEntries() []*Entry {
 	}
 }
 
-func (s *Storage) GetEntry(id string) *Entry {
+func (s *Storage) GetEntry(id string) *User {
 	if dbConfig.isSql{
 		rows, err := s.SqlDb.Query("SELECT * FROM job where Id = ?", id)
 		checkErr(err)
-		entry := &Entry{}
+		entry := &User{}
 
 		for rows.Next() {
-			err = rows.Scan(&entry.ID, &entry.Expression, &entry.Endpoint, &entry.Payload)
+			err = rows.Scan(&entry.Id, &entry.Email)
 			checkErr(err)
 			fmt.Println(entry)
 		}
@@ -153,7 +154,7 @@ func (s *Storage) GetEntry(id string) *Entry {
 		if err != nil {
 			return nil
 		}
-		entry, err := NewEntryFromBytes(data)
+		entry, err := NewUserFromBytes(data)
 		if err != nil {
 			return nil
 		}

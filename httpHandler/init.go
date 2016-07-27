@@ -8,6 +8,7 @@ import (
 	"github.com/linuxssm/frontendServer/jobScheduler"
 	"github.com/gorilla/mux"
 	"github.com/linuxssm/frontendServer/authentication"
+	"github.com/linuxssm/frontendServer/api"
 )
 
 
@@ -38,9 +39,17 @@ func StartAdminInterface(host string, port int) {
 	jobMux.HandleFunc("/auth/change", authentication.PostChange).Methods("POST")
 	jobMux.HandleFunc("/auth/", authentication.HandlePage).Methods("GET") // authorized page
 	jobMux.HandleFunc("/auth/logout", authentication.HandleLogout)
-
-
 	http.Handle("/auth/", jobMux)
+
+	//api
+	apiMux := mux.NewRouter()
+	api.Init()
+	apiMux.HandleFunc("/api/users", api.HandleUsers).Methods("GET")
+	apiMux.HandleFunc("/api/user/{id}", api.HandleUser).Methods("GET")
+
+	http.Handle("/api/", apiMux)
+
+
 	fmt.Printf("Server running on port %d\n", port)
 	//http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	http.ListenAndServe(addr, nil)
